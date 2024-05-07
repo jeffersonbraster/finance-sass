@@ -25,12 +25,13 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash } from "lucide-react";
+import UseConfirm from "@/hooks/use-confirm";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   filterKey: string;
-  onDelete?: (rows: Row<TData>[]) => void;
+  onDelete: (rows: Row<TData>[]) => void;
   disabled?: boolean;
 }
 
@@ -39,8 +40,13 @@ export function DataTable<TData, TValue>({
   data,
   filterKey,
   onDelete,
-  disabled
+  disabled,
 }: DataTableProps<TData, TValue>) {
+  const [ConfirmDialog, confirm] = UseConfirm(
+    "Você tem certeza?",
+    "Você não poderá desfazer essa ação."
+  );
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -66,6 +72,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
+      <ConfirmDialog />
       <div className="flex items-center py-4">
         <Input
           placeholder={`Filtrar por ${filterKey}..`}
@@ -76,7 +83,19 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
-          <Button disabled={disabled} size={"sm"} variant={"outline"} className="ml-auto font-normal text-xs">
+          <Button
+            disabled={disabled}
+            size={"sm"}
+            variant={"outline"}
+            onClick={async () => {
+              const ok = await confirm();
+              if (ok) {
+                onDelete(table.getFilteredSelectedRowModel().rows);
+                table.resetRowSelection();
+              }
+            }}
+            className="ml-auto font-normal text-xs"
+          >
             <Trash className="size-4 mr-2 text-rose-500" />
             Deletar ({table.getFilteredSelectedRowModel().rows.length})
           </Button>
@@ -125,7 +144,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sem resultados.
                 </TableCell>
               </TableRow>
             )}
