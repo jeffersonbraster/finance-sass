@@ -30,6 +30,45 @@ const app = new Hono()
 
       return c.json({ data })
     })
+  .get('/:id', clerkMiddleware(), zValidator("param", z.object({
+    id: z.string().optional()
+  })), async (c) => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid("param")
+
+    if (!id) {
+      throw new HTTPException(400, {
+        res: c.json({ message: "Sem id" }, 400)
+      })
+    }
+
+    if (!auth?.userId) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem autorização" }, 401)
+      })
+    }
+
+    const [data] = await db
+      .select({
+        id: accounts.id,
+        name: accounts.name
+      })
+      .from(accounts)
+      .where(
+        and(
+          eq(accounts.userId, auth.userId),
+          eq(accounts.id, id)
+        )
+      )
+
+    if (!data) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem dados" }, 404)
+      })
+    }
+
+    return c.json({ data })
+  })
   .post("/", clerkMiddleware(), zValidator("json", insertAccountsSchema.pick({
     name: true,
   })), async (c) => {
@@ -52,7 +91,7 @@ const app = new Hono()
   })
   .post("/bulk-delete", clerkMiddleware(), zValidator("json", z.object({
     ids: z.array(z.string())
-  })), async(c) => {
+  })), async (c) => {
     const auth = getAuth(c)
     const values = c.req.valid("json")
 
@@ -68,9 +107,87 @@ const app = new Hono()
         inArray(accounts.id, values.ids)
       )
     )
-    .returning({
-      id: accounts.id,
-    })
+      .returning({
+        id: accounts.id,
+      })
+
+    return c.json({ data })
+  })
+  .patch('/:id', clerkMiddleware(), zValidator("param", z.object({
+    id: z.string().optional()
+  })), zValidator("json", insertAccountsSchema.pick({
+    name: true
+  })), async (c) => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid("param")
+    const values = c.req.valid("json")
+
+    if (!id) {
+      throw new HTTPException(400, {
+        res: c.json({ message: "Sem id" }, 400)
+      })
+    }
+
+    if (!auth?.userId) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem autorização" }, 401)
+      })
+    }
+
+    const [data] = await db
+      .update(accounts)
+      .set(values)
+      .where(
+        and(
+          eq(accounts.userId, auth.userId),
+          eq(accounts.id, id)
+        )
+      )
+      .returning()
+
+    if (!data) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem dados" }, 404)
+      })
+    }
+
+    return c.json({ data })
+  })
+  .delete('/:id', clerkMiddleware(), zValidator("param", z.object({
+    id: z.string().optional()
+  })), async (c) => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid("param")
+
+    if (!id) {
+      throw new HTTPException(400, {
+        res: c.json({ message: "Sem id" }, 400)
+      })
+    }
+
+    if (!auth?.userId) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem autorização" }, 401)
+      })
+    }
+
+    const [data] = await db
+      .delete(accounts)
+      .where(
+        and(
+          eq(accounts.userId, auth.userId),
+          eq(accounts.id, id)
+        )
+      )
+      .returning({
+        id: accounts.id
+      })
+
+    if (!data) {
+      throw new HTTPException(401, {
+        res: c.json({ message: "Sem dados" }, 404)
+      })
+    }
 
     return c.json({ data })
   })
