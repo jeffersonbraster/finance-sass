@@ -15,6 +15,13 @@
       "when": 1715043909202,
       "tag": "0001_icy_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1715204753652,
+      "tag": "0002_sparkling_onslaught",
+      "breakpoints": true
     }
   ]
 }

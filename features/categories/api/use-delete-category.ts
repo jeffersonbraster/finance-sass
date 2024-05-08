@@ -3,25 +3,25 @@ import {  InferResponseType } from 'hono'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { client } from '@/lib/hono'
 
-type ResponseType = InferResponseType<typeof client.api.accounts[":id"]["$delete"]>
+type ResponseType = InferResponseType<typeof client.api.categories[":id"]["$delete"]>
 
-export const useDeleteAccount = (id?: string) => {
+export const useDeleteCategory = (id?: string) => {
   const queryClient = useQueryClient()
 
   const mutation = useMutation<ResponseType, Error>({
     mutationFn: async () => {
-      const response = await client.api.accounts[":id"]["$delete"]({
+      const response = await client.api.categories[":id"]["$delete"]({
         param: { id }
       })
       return await response.json()
     },
     onSuccess: () => {
-      toast.success('Conta deletada com sucesso')
-      queryClient.invalidateQueries({ queryKey: ['account', { id }] })
-      queryClient.invalidateQueries({ queryKey: ['accounts'] })
+      toast.success('Categoria deletada com sucesso')
+      queryClient.invalidateQueries({ queryKey: ['category', { id }] })
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
     onError: () => {
-      toast.error('Erro ao deletar conta')
+      toast.error('Erro ao deletar categoria')
     }
   })
 
