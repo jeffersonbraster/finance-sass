@@ -1,8 +1,5 @@
-import { insertAccountsSchema } from "@/db/schema";
+import { insertTransactionsSchema } from "@/db/schema";
 import { z } from "zod";
-import { useGetAccount } from "../api/use-get-account";
-import { useDeleteAccount } from "../api/use-delete-account";
-import { useOpenAccount } from "../hooks/use-open-transaction";
 import {
   Sheet,
   SheetContent,
@@ -10,30 +7,58 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import AccountForm from "./transaction-form";
 import { Loader2 } from "lucide-react";
-import { useEditAccount } from "../api/use-edit-account";
 import UseConfirm from "@/hooks/use-confirm";
+import { useOpenTransaction } from "../hooks/use-open-transaction";
+import { useGetTransaction } from "../api/use-get-transaction";
+import { useEditTransaction } from "../api/use-edit-transaction";
+import { useDeleteTransaction } from "../api/use-delete-transaction";
+import TransactionForm from "./transaction-form";
+import { useGetCategories } from "@/features/categories/api/use-get-categories";
+import { useCreateCategory } from "@/features/categories/api/use-create-category";
+import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
+import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 
-
-const formSchema = insertAccountsSchema.pick({ name: true });
+const formSchema = insertTransactionsSchema.omit({ id: true });
 
 type FormValues = z.input<typeof formSchema>;
 
-const EditAccountSheet = () => {
-  const { isOpen, onClose, id } = useOpenAccount();
+const EditTransactionSheet = () => {
+  const { isOpen, onClose, id } = useOpenTransaction();
 
   const [ConfirmDialog, confirm] = UseConfirm(
     "Você tem certeza?",
-    "Você irá deletar essa conta permanentemente"
-  )
+    "Você irá deletar essa transação permanentemente"
+  );
 
-  const accountQuery = useGetAccount(id);
-  const editMutation = useEditAccount(id);
-  const deleteMutation = useDeleteAccount(id)
+  const transactionQuery = useGetTransaction(id);
+  const editMutation = useEditTransaction(id);
+  const deleteMutation = useDeleteTransaction(id);
 
-  const isPending = editMutation.isPending || deleteMutation.isPending
-  const isLoading = accountQuery.isLoading;
+  const categoryQuery = useGetCategories();
+  const categoryMutation = useCreateCategory();
+  const onCreateCategory = (name: string) => categoryMutation.mutate({ name });
+  const categoryOptions = (categoryQuery.data ?? []).map((category) => ({
+    label: category.name,
+    value: category.id,
+  }));
+
+  const accountQuery = useGetAccounts();
+  const accountMutation = useCreateAccount();
+  const onCreateAccount = (name: string) => accountMutation.mutate({ name });
+  const accountOptions = (accountQuery.data ?? []).map((account) => ({
+    label: account.name,
+    value: account.id,
+  }));
+
+  const isPending =
+    editMutation.isPending ||
+    deleteMutation.isPending ||
+    transactionQuery.isLoading ||
+    categoryMutation.isPending ||
+    accountMutation.isPending;
+
+  const isLoading = transactionQuery.isLoading || categoryQuery.isLoading || accountQuery.isLoading;
 
   const onSubmit = (values: FormValues) => {
     editMutation.mutate(values, {
@@ -42,54 +67,70 @@ const EditAccountSheet = () => {
   };
 
   const onDelete = async () => {
-    const ok = await confirm()
+    const ok = await confirm();
 
-    if(ok) {
+    if (ok) {
       deleteMutation.mutate(undefined, {
         onSuccess: () => {
-          onClose()
-        }
-      })
+          onClose();
+        },
+      });
     }
-  }
+  };
 
-  const defaultValues = accountQuery.data
+  const defaultValues = transactionQuery.data
     ? {
-        name: accountQuery.data.name,
+        accountId: transactionQuery.data.accountId,
+        categoryId: transactionQuery.data.categoryId,
+        amount: transactionQuery.data.amount.toString(),
+        date: transactionQuery.data.date
+          ? new Date(transactionQuery.data.date)
+          : new Date(),
+        payee: transactionQuery.data.payee,
+        notes: transactionQuery.data.notes,
       }
     : {
-        name: "",
+        accountId: "",
+        categoryId: "",
+        amount: "",
+        date: new Date(),
+        payee: "",
+        notes: "",
       };
 
   return (
     <>
-    <ConfirmDialog />
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="space-y-4">
-        <SheetHeader>
-          <SheetTitle>Editar conta</SheetTitle>
-          <SheetDescription>
-            Administre as configurações da sua conta
-          </SheetDescription>
-        </SheetHeader>
+      <ConfirmDialog />
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent className="space-y-4">
+          <SheetHeader>
+            <SheetTitle>Editar transação</SheetTitle>
+            <SheetDescription>
+              Faça a correção da sua transação
+            </SheetDescription>
+          </SheetHeader>
 
-        {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="size-4 text-muted-foreground animate-spin" />
-          </div>
-        ) : (
-          <AccountForm
-            id={id}
-            onSubmit={onSubmit}
-            disabled={isPending}
-            defaultValues={defaultValues}
-            onDelete={onDelete}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="size-4 text-muted-foreground animate-spin" />
+            </div>
+          ) : (
+            <TransactionForm
+              id={id}
+              defaultValues={defaultValues}
+              onSubmit={onSubmit}
+              disabled={isPending}
+              categoryOptions={categoryOptions}
+              onCreateCategory={onCreateCategory}
+              accountOptions={accountOptions}
+              onCreateAccount={onCreateAccount}
+              onDelete={onDelete}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
 
-export default EditAccountSheet;
+export default EditTransactionSheet;
