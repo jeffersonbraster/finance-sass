@@ -2,7 +2,7 @@ import { insertAccountsSchema } from "@/db/schema";
 import { z } from "zod";
 import { useGetAccount } from "../api/use-get-account";
 import { useDeleteAccount } from "../api/use-delete-account";
-import { useOpenAccount } from "../hooks/use-open-account";
+import { useOpenAccount } from "../hooks/use-open-transaction";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import AccountForm from "./account-form";
+import AccountForm from "./transaction-form";
 import { Loader2 } from "lucide-react";
 import { useEditAccount } from "../api/use-edit-account";
 import UseConfirm from "@/hooks/use-confirm";
