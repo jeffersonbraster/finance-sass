@@ -1,0 +1,2 @@
+Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
+CARD_PAYMENT,current,2024-05-09 10:00:00,2024-05-09 10:05:00,Shop,-10.26,0.00,BRL,COMPLETED,100.00

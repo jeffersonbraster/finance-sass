@@ -61,13 +61,7 @@ const TransactionForm = ({
   });
 
   const handleSubmit = (values: FormValues) => {
-    console.log({values})
     const amountInMili = convertAmountToMiliunits(values.amount);
-
-    console.log("amountInMili", convertAmountToMiliunits(values.amount))
-    console.log("amountInMili", amountInMili)
-    
-    
     onSubmit({...values, amount: amountInMili});
   };
 

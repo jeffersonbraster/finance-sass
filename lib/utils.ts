@@ -10,13 +10,8 @@ export function convertAmountFromMiliunits(amount: number) {
 }
 
 export function convertAmountToMiliunits(amount: string) {
-  // Remover qualquer caracter que não seja número ou vírgula
-  const cleanedAmount = amount.replace(/[^\d,]/g, '');
-  
-  // Substituir a vírgula por ponto
-  const amountWithDot = cleanedAmount.replace(',', '.');
+  const amountWithDot = amount.replace(',', '.');
 
-  // Converter o valor para número e multiplicar por 1000
   const amountInMiliunits = Math.round(Number(amountWithDot) * 1000);
   
   return amountInMiliunits;
