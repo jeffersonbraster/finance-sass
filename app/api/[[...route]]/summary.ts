@@ -51,7 +51,7 @@ const app = new Hono()
 
 
     const [currentPeriod] = await fetchFinancialData(auth.userId, startDate, endDate)
-    const [lastPeriod] = await fetchFinancialData(auth.userId, startDate, endDate)
+    const [lastPeriod] = await fetchFinancialData(auth.userId, lastPeriodStart, lastPeriodEnd)
 
     const incomeChange = calculatePercentageChange(currentPeriod.income, lastPeriod.income)
 
