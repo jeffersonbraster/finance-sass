@@ -89,7 +89,7 @@ const DataCard = ({
             percentageChange < 0 && "text-rose-500"
           )}
         >
-          {formatPercentage(percentageChange)} referente ao ultimo periodo
+          {formatPercentage(percentageChange, {addPrefix: true})} referente ao ultimo periodo
         </p>
       </CardContent>
     </Card>
